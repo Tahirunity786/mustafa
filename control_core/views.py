@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 # Serializers
-from control_core.serializers import CarSerializer
+from control_core.serializers import CarSerializer, CarRentAgentSerializer, CarUpdateSerializer
 
 # DB Models
 from control_core.models import Car
@@ -47,22 +47,47 @@ class RentAgent(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        user = request.user
-
-        # Not serializable data
-        serializers = CarSerializer(data=request.data)
-
+        # Pass request object to serializer context
+        serializers = CarRentAgentSerializer(data=request.data, context={'request': request})
+        
         if serializers.is_valid():
             serializers.save()
-
+            
+            
             response = {
-                "success":"Thank for choosing our service, Please contact our customer service for more details"
+                "success": "Thank you for choosing our service. Please contact our customer service for more details."
             }
-
+    
             return Response(data=response, status=status.HTTP_200_OK)
         else:
             return Response(data=serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
+class CarUpdateView(APIView):
+    def post(self, request, format=None):
+        pk = request.data.get('car_id')
+        try:
+            car = Car.objects.get(pk=pk)
+        except Car.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
+        serializer = CarUpdateSerializer(car, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class DeleteCar(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def post(self,request):
+        car_id = request.data.get('car_id')
 
+        try:
+            car = Car.objects.get(id = car_id)
+        except:
+            return Response({"Error":f"Car for this id {car_id} not found" }, status=status.HTTP_400_BAD_REQUEST)
+        
+        car.delete()
+
+        return Response({"Success":"Car information deleted"}, status=status.HTTP_200_OK)

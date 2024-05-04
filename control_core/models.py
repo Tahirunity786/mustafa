@@ -14,7 +14,6 @@ class Car(models.Model):
     speed = models.CharField(max_length=100, db_index=True, default="")
     color = models.CharField(max_length=100, db_index=True, default="")
     available_for_city = models.CharField(max_length=100, db_index=True, default="")
-    rating = models.DecimalField(max_digits=5, decimal_places=1)
     available_from = models.DateField(db_index=True, default=timezone.now)
     available_till = models.DateField(db_index=True, default="")
     rent_price = models.PositiveIntegerField(db_index=True, default=0)
@@ -22,8 +21,15 @@ class Car(models.Model):
 
 class CarRent(models.Model):
     customer = models.ForeignKey(User, on_delete=models.CASCADE, default="")
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, default="")
     days = models.PositiveIntegerField(default=0, db_index=True)
     rent_start_from = models.DateField(db_index=True, default="")
     rent_end_from = models.DateField(db_index=True, default="")
     total_rent_price = models.PositiveIntegerField(default=0, db_index=True)
     city_location = models.CharField(max_length=200, db_index=True, default="")
+
+class CarReview(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default="", db_index=True)
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, default="", db_index=True)
+    rating = rating = models.DecimalField(max_digits=5, decimal_places=1, db_index=True)
+    experience = models.TextField(db_index=True, default="")

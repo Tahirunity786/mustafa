@@ -1,5 +1,5 @@
 from django.urls import path
-from control_core.views import AddCars, ListSearchableCar, RentAgent, DeleteCar, CarUpdateView
+from control_core.views import AddCars, ListSearchableCar, RentAgent, DeleteCar, CarUpdateView, FilterCars
 
 
 urlpatterns = [
@@ -13,5 +13,7 @@ urlpatterns = [
     path('public/show/cars', ListSearchableCar.as_view()),
     # Show All Cars 'Temporary
     path('public/rent/cars', RentAgent.as_view()),
+    # Show All Cars 'Temporary
+    path('public/filter/cars', FilterCars.as_view()),
   
 ]

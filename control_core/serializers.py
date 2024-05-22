@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from control_core.models import Car, CarRent
+from control_core.models import Car, CarRent, CarReview
 from control_core.utiles import mail_sender, ready_car_for_rent
 from django.db import transaction
 #----------------------- Serilizers logic implementation ----------------------- #
@@ -8,7 +8,7 @@ class CarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Car
-        fields = ("id", "image", "name", "speed", "color", "available_for_city", "available_from", "available_till", "rent_price")
+        fields = ("id", "image", "name", "speed", "color","model", "seats", "bags_capcity" ,"available_for_city", "available_from", "available_till", "rent_price")
         
         extra_kwargs = {
             'id': {'required': True},
@@ -73,3 +73,15 @@ class CarUpdateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+class CarReviews(serializers.ModelSerializer):
+    class Meta:
+        model = CarReview
+        fields = ("id","rating")
+
+class CarDetails(serializers.ModelSerializer):
+
+    car_reviews = CarReviews(many = True, read_only= True)
+    class Meta:
+        model = Car
+        fields = ("id", "image", "name", "speed", "color","model","seats","bags_capcity", "available_for_city", "available_from", "available_till", "rent_price", "car_reviews")

@@ -5,14 +5,17 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 
 # Serializers
-from control_core.serializers import CarSerializer, CarRentAgentSerializer, CarUpdateSerializer
+from control_core.serializers import CarSerializer, CarRentAgentSerializer, CarUpdateSerializer, CarDetails
 
 # DB Models
 from control_core.models import Car
 
+# Django utiles 
+from django.db.models import Q
+from django.utils.dateparse import parse_date
 # User detection
 User = get_user_model()
 
@@ -42,6 +45,26 @@ class ListSearchableCar(APIView):
         
         # Return the serialized data
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FilterCars(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        city = request.data.get("city")
+        date = request.data.get("date")
+        parsed_date = parse_date(date)
+      
+        if not city and not parse_date:
+            return Response({"Error":"City and date not given"}, status = status.HTTP_400_BAD_REQUEST)
+
+        try:
+            car_data = Car.objects.filter(available_for_city=city, available_from__lte=parsed_date, available_till__gte=parsed_date)
+            serializers = CarDetailsSerializer(car_data, many=True)  # Note `many=True` since car_data is a queryset
+            return Response(serializers.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(data={'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class RentAgent(APIView):
     permission_classes = [IsAuthenticated]

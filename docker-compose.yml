@@ -1,0 +1,10 @@
+version: '3'
+services:
+  web:
+    build: .
+    command: bash -c "python manage.py runserver"
+    container_name: processor
+    volumes:
+      - .:/mustafa
+    ports:
+      - "8000:8000"

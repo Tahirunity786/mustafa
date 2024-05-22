@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'control_account.apps.ControlAccountConfig',
     'control_core.apps.ControlCoreConfig',
+    
 ]
 
 

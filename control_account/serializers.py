@@ -35,7 +35,7 @@ class CreateUserSearializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password2']
+        fields = ['email', 'password', 'password2']
 
     extra_kwargs = {
         'password': {'write_only': True}
@@ -65,7 +65,6 @@ class CreateUserSearializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'Error': 'User already exists'})
 
         account = User.objects.create_user(
-            username=self.validated_data['username'],
             email=self.validated_data['email'],
             password=self.validated_data['password'],
             is_active = True,
@@ -88,5 +87,5 @@ class UserLoginSerializer(serializers.Serializer):
 
     class Meta:
         model = User
-        fields = ['username', 'password']
+        fields = ['email', 'password']
 

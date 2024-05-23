@@ -5,7 +5,7 @@ from control_account.manager import CustomUserManager
 class User(AbstractUser):
     # General Information about the user
     profile = models.ImageField(upload_to="profile/images", blank=True, null=True)
-    username = models.CharField(max_length=100, unique=True, db_index=True)
+    username = models.CharField(max_length=100, unique=True, db_index=True, null=True, blank=True)
     first_name = models.CharField(max_length=100,db_index=True, default="")
     last_name = models.CharField(max_length=100,db_index=True, default="")
     nationality = models.CharField(max_length=100, db_index=True, default="")
@@ -18,8 +18,8 @@ class User(AbstractUser):
     is_seller = models.BooleanField(default=False)
     is_buyer = models.BooleanField(default=False)
     password = models.CharField(max_length=200,db_index=True, default=None )
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
 
     objects = CustomUserManager()
 

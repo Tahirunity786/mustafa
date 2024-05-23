@@ -56,7 +56,6 @@ class CreateUserView(APIView):
             
             response_data = {
                 'response': 'Account has been created',
-                'username': account.username,
                 'email': account.email,
                 'id': account.id,
                 'token': tokken
@@ -102,10 +101,10 @@ class UserLoginView(APIView):
             status.HTTP_200_OK: If authentication is successful.
             status.HTTP_401_UNAUTHORIZED: If authentication fails.
         """
-        username = request.data.get('username')
+        username = request.data.get('email')
         password = request.data.get('password')
 
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(request, email=username, password=password)
 
         if user and not user.is_blocked:
             token = get_tokens_for_user(user)

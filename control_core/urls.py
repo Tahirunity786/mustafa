@@ -1,5 +1,5 @@
 from django.urls import path
-from control_core.views import AddCars, ListSearchableCar, RentAgent, DeleteCar, CarUpdateView, FilterCars
+from control_core.views import ShowCarDetail, AddCars, ListSearchableCar, RentAgent, DeleteCar, CarUpdateView, FilterCars
 
 
 urlpatterns = [
@@ -9,11 +9,14 @@ urlpatterns = [
     path('public/update/cars', CarUpdateView.as_view()),
     # Delete Cars
     path('public/delete/cars', DeleteCar.as_view()),
-    # Show All Cars 'Temporary
+    # OPtional APi
     path('public/show/cars', ListSearchableCar.as_view()),
-    # Show All Cars 'Temporary
+    # Api to work as an agent for rent a car
     path('public/rent/cars', RentAgent.as_view()),
-    # Show All Cars 'Temporary
+    # Show All Cars by passing cars
     path('public/filter/cars', FilterCars.as_view()),
+
+    # Show A specific car details
+    path('public/show-car-details', ShowCarDetail.as_view()),
   
 ]

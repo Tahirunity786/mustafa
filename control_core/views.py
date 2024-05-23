@@ -16,6 +16,7 @@ from control_core.models import Car
 # Django utiles 
 from django.db.models import Q
 from django.utils.dateparse import parse_date
+from django.shortcuts import get_object_or_404
 # User detection
 User = get_user_model()
 
@@ -59,7 +60,7 @@ class FilterCars(APIView):
 
         try:
             car_data = Car.objects.filter(available_for_city=city, available_from__lte=parsed_date, available_till__gte=parsed_date)
-            serializers = CarDetailsSerializer(car_data, many=True)  # Note `many=True` since car_data is a queryset
+            serializers = CarDetails(car_data, many=True)  # Note `many=True` since car_data is a queryset
             return Response(serializers.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data={'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -114,3 +115,22 @@ class DeleteCar(APIView):
         car.delete()
 
         return Response({"Success":"Car information deleted"}, status=status.HTTP_200_OK)
+
+class ShowCarDetail(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        car_id = request.data.get('car_id')
+
+        if not car_id:
+            return Response({'error': 'Car ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            car = get_object_or_404(Car, id=car_id)
+        except Car.DoesNotExist:
+            return Response({'error': 'Car not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CarDetails(instance=car)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        

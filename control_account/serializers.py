@@ -89,3 +89,31 @@ class UserLoginSerializer(serializers.Serializer):
         model = User
         fields = ['email', 'password']
 
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['password', 'password2']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def validate(self, data):
+        """
+        Ensure the passwords match.
+        """
+        if data['password'] != data['password2']:
+            raise serializers.ValidationError("Passwords do not match.")
+        return data
+
+    def save(self, **kwargs):
+        """
+        Save method for changing the user's password.
+        """
+        user = self.context['request'].user
+        user.set_password(self.validated_data['password'])
+        user.save()
+        return user
+

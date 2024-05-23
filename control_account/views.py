@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate
 
 from control_account.rendenerers import UserRenderer
-from control_account.serializers import CreateUserSearializer
+from control_account.serializers import CreateUserSearializer, ChangePasswordSerializer
 from control_account.tokken_agent import get_tokens_for_user
 # Create your views here.
 
@@ -115,3 +115,16 @@ class UserLoginView(APIView):
             return Response({"Error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         
         
+class ChangePassword(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"success": "Password changed"}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

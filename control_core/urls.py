@@ -17,6 +17,6 @@ urlpatterns = [
     path('public/filter/cars', FilterCars.as_view()),
 
     # Show A specific car details
-    path('public/show-car-details', ShowCarDetail.as_view()),
+    path('public/show-car-details/<int:car_id>/', ShowCarDetail.as_view()),
   
 ]

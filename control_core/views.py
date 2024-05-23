@@ -120,9 +120,8 @@ class ShowCarDetail(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        car_id = request.data.get('car_id')
-
+    def get(self, request, *args, **kwargs):
+        car_id = kwargs.get('car_id')
         if not car_id:
             return Response({'error': 'Car ID is required'}, status=status.HTTP_400_BAD_REQUEST)
 

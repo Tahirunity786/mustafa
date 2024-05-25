@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from control_core.models import Car, CarRent, CarReview
-from control_core.utiles import mail_sender, ready_car_for_rent
+from control_core.models import Car, CarRent, CarReview, Orders
+from control_core.utiles import per_info_save, ready_car_for_rent
 from django.db import transaction
 #----------------------- Serilizers logic implementation ----------------------- #
 
@@ -24,6 +24,11 @@ class CarSerializer(serializers.ModelSerializer):
         
     
 class CarRentAgentSerializer(serializers.ModelSerializer):
+    fullname = serializers.CharField(write_only=True)
+    nationality = serializers.CharField(write_only=True)
+    phoneno = serializers.CharField(write_only=True)
+    email = serializers.EmailField(write_only=True)
+
     class Meta:
         model = CarRent
         fields = "__all__"
@@ -33,7 +38,11 @@ class CarRentAgentSerializer(serializers.ModelSerializer):
         Create and return a new `CarRent` instance, given the validated data.
         """
         user = self.context['request'].user
-        car = validated_data['car']
+        car = validated_data.pop('car')
+        fullname = validated_data.pop('fullname')
+        nationality = validated_data.pop('nationality')
+        phoneno = validated_data.pop('phoneno')
+        email = validated_data.pop('email')
         
         with transaction.atomic():
             instance = CarRent.objects.create(
@@ -45,9 +54,9 @@ class CarRentAgentSerializer(serializers.ModelSerializer):
                 total_rent_price=validated_data['total_rent_price'],
                 city_location=validated_data['city_location']
             )
-            ready_car_for_rent(user, car.id)
-            # mail_sender(user)
-        
+            ready_car_for_rent(user, car.id, req=self.context['request'])
+            per_info_save(user, fullname, nationality, phoneno, email)
+
         return instance
     
 
@@ -85,3 +94,10 @@ class CarDetails(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = ("id", "image", "name", "speed", "color","model","seats","bags_capcity", "available_for_city", "available_from", "available_till", "rent_price", "car_reviews")
+    
+
+class OrderSerializer(serializers.ModelSerializer):
+    car = CarSerializer(read_only= True)
+    class Meta:
+        model = CarRent
+        fields = ("id","car", "days", "rent_start_from", "rent_end_from", "total_rent_price", "city_location")

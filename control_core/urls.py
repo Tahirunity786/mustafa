@@ -1,5 +1,5 @@
 from django.urls import path
-from control_core.views import ShowCarDetail, AddCars, ListSearchableCar, RentAgent, DeleteCar, CarUpdateView, FilterCars
+from control_core.views import OrderAgent, ShowCarDetail, AddCars, ListSearchableCar, RentAgent, DeleteCar, CarUpdateView, FilterCars
 
 
 urlpatterns = [
@@ -18,5 +18,6 @@ urlpatterns = [
 
     # Show A specific car details
     path('public/show-car-details/<int:car_id>/', ShowCarDetail.as_view()),
+    path('public/show-orders', OrderAgent.as_view()),
   
 ]

@@ -37,3 +37,14 @@ class CarReview(models.Model):
     car = models.ForeignKey(Car, on_delete=models.CASCADE, default="", db_index=True)
     rating = rating = models.DecimalField(max_digits=5, decimal_places=1, db_index=True)
     experience = models.TextField(db_index=True, default="")
+
+class Orders(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
+    rent_car_by_user = models.ForeignKey('Car', related_name="car_orders", on_delete=models.CASCADE, default=0)
+    date_ordered = models.DateField(auto_now_add=True, db_index=True)
+    total_price = models.PositiveBigIntegerField(db_index=True, default=0)
+    total_days = models.PositiveIntegerField(db_index=True, default=0)
+
+
+    def __str__(self):
+        return f"Order {self.id} by {self.user.username}"

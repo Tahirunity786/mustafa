@@ -1,9 +1,8 @@
 from django.db import transaction
-from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
-from django.conf import settings
 from control_core.models import Car
+from control_account.models import PersonalDetails
 from django.db.models import F
 
 def mail_sender(user) -> None:
@@ -18,9 +17,8 @@ def mail_sender(user) -> None:
         fail_silently=False,
     )
 
-
 @transaction.atomic
-def ready_car_for_rent(user, car_id: int) -> None:
+def ready_car_for_rent(user, car_id: int, req) -> None:
     """
     Update the car availability and renters count.
     """
@@ -29,3 +27,16 @@ def ready_car_for_rent(user, car_id: int) -> None:
     car.people_counter = F('people_counter') + 1
     car.save()
 
+@transaction.atomic
+def per_info_save(user, fullname, nationality, phoneno, email) -> None:
+    """
+    Add personal information for an order
+    """
+    p_data = PersonalDetails.objects.create(
+        full_name=fullname,
+        nationality=nationality,
+        phone_no=phoneno,
+        email=email,
+        user=user
+    )
+    p_data.save()

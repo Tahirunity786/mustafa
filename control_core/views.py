@@ -8,10 +8,10 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 
 # Serializers
-from control_core.serializers import CarSerializer, CarRentAgentSerializer, CarUpdateSerializer, CarDetails
+from control_core.serializers import OrderSerializer, CarSerializer, CarRentAgentSerializer, CarUpdateSerializer, CarDetails
 
 # DB Models
-from control_core.models import Car
+from control_core.models import Car, CarRent
 
 # Django utiles 
 from django.db.models import Q
@@ -52,40 +52,44 @@ class FilterCars(APIView):
 
     def post(self, request):
         city = request.data.get("city")
-        date = request.data.get("date")
-        parsed_date = parse_date(date)
-      
-        if not city and not parse_date:
-            return Response({"Error":"City and date not given"}, status = status.HTTP_400_BAD_REQUEST)
+        available_from = request.data.get("available_from")
+        available_to = request.data.get("available_to")
+
+        if not city or not available_from or not available_to:
+            return Response({"Error": "City and dates must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        parsed_af = parse_date(available_from)
+        parsed_at = parse_date(available_to)
+
+        if not parsed_af or not parsed_at:
+            return Response({"Error": "Invalid date format"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            car_data = Car.objects.filter(available_for_city=city, available_from__lte=parsed_date, available_till__gte=parsed_date)
+            car_data = Car.objects.filter(
+                available_for_city=city,
+                available_from__lte=parsed_af,
+                available_till__gte=parsed_at
+            )
             serializers = CarDetails(car_data, many=True)  # Note `many=True` since car_data is a queryset
             return Response(serializers.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data={'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
+        
 class RentAgent(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         # Pass request object to serializer context
-        serializers = CarRentAgentSerializer(data=request.data, context={'request': request})
+        serializer = CarRentAgentSerializer(data=request.data, context={'request': request})
         
-        if serializers.is_valid():
-            serializers.save()
-            
-            
+        if serializer.is_valid():
+            serializer.save()
             response = {
                 "success": "Thank you for choosing our service. Please contact our customer service for more details."
             }
-    
             return Response(data=response, status=status.HTTP_200_OK)
         else:
-            return Response(data=serializers.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CarUpdateView(APIView):
     def post(self, request, format=None):
@@ -132,4 +136,23 @@ class ShowCarDetail(APIView):
 
         serializer = CarDetails(instance=car)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class OrderAgent(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
         
+        try:
+            orders = CarRent.objects.filter(customer = user).order_by('-id')
+        except CarRent.DoesNotExist as e:
+            return Response({"error":e}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Serilizers processor
+        serializers = OrderSerializer(instance=orders, many =True)
+
+        return Response(serializers.data, status=status.HTTP_200_OK)
+        
+        
+

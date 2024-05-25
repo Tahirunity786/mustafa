@@ -14,7 +14,7 @@ from control_core.serializers import OrderSerializer, CarSerializer, CarRentAgen
 from control_core.models import Car, CarRent
 
 # Django utiles 
-from django.db.models import Q
+from django.db.models import F
 from django.utils.dateparse import parse_date
 from django.shortcuts import get_object_or_404
 # User detection
@@ -137,21 +137,25 @@ class ShowCarDetail(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class OrderAgent(APIView):
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         user = request.user
         
-        try:
-            orders = CarRent.objects.filter(customer = user).order_by('-id')
-        except CarRent.DoesNotExist as e:
-            return Response({"error":e}, status=status.HTTP_400_BAD_REQUEST)
+        # Fetch valid orders
+        orders = CarRent.objects.filter(customer=user)
+        valid_orders = [order for order in orders if not order.is_expired()]
+
+        # Remove expired orders and make cars available again
+        expired_orders = [order for order in orders if order.is_expired()]
+        for expired_order in expired_orders:
+            car = expired_order.car
+            car.people_rent_it.remove(user)
+            car.people_counter = F('people_counter') - 1
+            car.save()
+            expired_order.delete()
         
-        # Serilizers processor
-        serializers = OrderSerializer(instance=orders, many =True)
+        # Serialize valid orders
+        serializers = OrderSerializer(instance=valid_orders, many=True)
 
         return Response(serializers.data, status=status.HTTP_200_OK)
-        
-        
-

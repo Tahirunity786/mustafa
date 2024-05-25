@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -20,6 +21,8 @@ class Car(models.Model):
     rent_price = models.PositiveIntegerField(db_index=True, default=0)
     reviews = models.DecimalField(max_digits=5, decimal_places=1, db_index=True, null=True)
 
+from django.utils import timezone
+
 class CarRent(models.Model):
     customer = models.ForeignKey(User, on_delete=models.CASCADE, default="")
     car = models.ForeignKey(Car, on_delete=models.CASCADE, default="")
@@ -27,6 +30,16 @@ class CarRent(models.Model):
     total_rent_price = models.PositiveIntegerField(default=0, db_index=True)
     city_location = models.CharField(max_length=200, db_index=True, default="")
     rental_start_date = models.DateField(db_index=True, default=timezone.now)
+
+    def remaining_days(self):
+        today = timezone.now().date()
+        end_date = self.rental_start_date + timedelta(days=self.days)
+        remaining = (end_date - today).days
+        return remaining if remaining > 0 else 0
+
+    def is_expired(self):
+        return self.remaining_days() <= 0
+
 
 class CarReview(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default="", db_index=True)

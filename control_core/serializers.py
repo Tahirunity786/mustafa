@@ -123,7 +123,12 @@ class CarDetails(serializers.ModelSerializer):
     
 
 class OrderSerializer(serializers.ModelSerializer):
-    car = CarSerializer(read_only= True)
+    car = CarSerializer(read_only=True)
+    remaining_days = serializers.SerializerMethodField()
+
     class Meta:
         model = CarRent
-        fields = ("id","car", "days", "rent_start_from", "rent_end_from", "total_rent_price", "city_location")
+        fields = ("id", "car", "days", "rental_start_date", "total_rent_price", "city_location", "remaining_days")
+
+    def get_remaining_days(self, obj):
+        return obj.remaining_days()

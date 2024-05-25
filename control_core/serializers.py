@@ -2,6 +2,8 @@ from rest_framework import serializers
 from control_core.models import Car, CarRent, CarReview, Orders
 from control_core.utiles import per_info_save, ready_car_for_rent
 from django.db import transaction
+from datetime import timedelta
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 #----------------------- Serilizers logic implementation ----------------------- #
 
@@ -28,6 +30,8 @@ class CarRentAgentSerializer(serializers.ModelSerializer):
     nationality = serializers.CharField(write_only=True)
     phoneno = serializers.CharField(write_only=True)
     email = serializers.EmailField(write_only=True)
+    rental_start_date = timezone.now().date()
+    days = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = CarRent
@@ -35,11 +39,19 @@ class CarRentAgentSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """
-        Check that the car is available for booking.
+        Check that the car is available for booking and that the rental period is valid.
         """
         car = data.get('car')
+        rental_days = data.get('days')
+        
+        rental_end_date = self.rental_start_date + timedelta(days=rental_days)
+        
         if CarRent.objects.filter(car=car, city_location=data.get('city_location')).exists():
             raise ValidationError("This car is already booked by another user.")
+        
+        if self.rental_start_date < car.available_from or rental_end_date > car.available_till:
+            raise ValidationError(f"This car is only available from {car.available_from} to {car.available_till}.")
+
         return data
 
     def create(self, validated_data):
@@ -52,13 +64,19 @@ class CarRentAgentSerializer(serializers.ModelSerializer):
         nationality = validated_data.pop('nationality')
         phoneno = validated_data.pop('phoneno')
         email = validated_data.pop('email')
+        total_rent_price = validated_data.pop('total_rent_price')
+       
+        days = validated_data.pop('days')
+        
+        
         
         with transaction.atomic():
             instance = CarRent.objects.create(
                 customer=user,
                 car=car,
-                days=validated_data['days'],
-                total_rent_price=validated_data['total_rent_price'],
+                days=days,
+                total_rent_price=total_rent_price,
+                rental_start_date=self.rental_start_date,
                 city_location=validated_data['city_location']
             )
             ready_car_for_rent(user, car.id, req=self.context['request'])

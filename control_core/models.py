@@ -4,8 +4,6 @@ from django.utils import timezone
 
 User = get_user_model()
 
-
-
 class Car(models.Model):
     image = models.ImageField(upload_to="cars", default="", db_index=True)
     people_rent_it = models.ManyToManyField(User, default="", db_index=True)
@@ -22,13 +20,13 @@ class Car(models.Model):
     rent_price = models.PositiveIntegerField(db_index=True, default=0)
     reviews = models.DecimalField(max_digits=5, decimal_places=1, db_index=True, null=True)
 
-
 class CarRent(models.Model):
     customer = models.ForeignKey(User, on_delete=models.CASCADE, default="")
     car = models.ForeignKey(Car, on_delete=models.CASCADE, default="")
     days = models.PositiveIntegerField(default=0, db_index=True)
     total_rent_price = models.PositiveIntegerField(default=0, db_index=True)
     city_location = models.CharField(max_length=200, db_index=True, default="")
+    rental_start_date = models.DateField(db_index=True, default=timezone.now)
 
 class CarReview(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default="", db_index=True)

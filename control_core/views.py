@@ -74,7 +74,6 @@ class FilterCars(APIView):
             return Response(serializers.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data={'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
 class RentAgent(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -90,7 +89,6 @@ class RentAgent(APIView):
             return Response(data=response, status=status.HTTP_200_OK)
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
   
 class CarUpdateView(APIView):
     def post(self, request, format=None):

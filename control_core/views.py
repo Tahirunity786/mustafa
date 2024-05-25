@@ -91,6 +91,7 @@ class RentAgent(APIView):
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+  
 class CarUpdateView(APIView):
     def post(self, request, format=None):
         pk = request.data.get('car_id')

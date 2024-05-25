@@ -16,7 +16,6 @@ def mail_sender(user) -> None:
         [user.email],
         fail_silently=False,
     )
-
 @transaction.atomic
 def ready_car_for_rent(user, car_id: int, req) -> None:
     """

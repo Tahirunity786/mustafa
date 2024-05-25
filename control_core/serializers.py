@@ -2,13 +2,14 @@ from rest_framework import serializers
 from control_core.models import Car, CarRent, CarReview, Orders
 from control_core.utiles import per_info_save, ready_car_for_rent
 from django.db import transaction
+from django.core.exceptions import ValidationError
 #----------------------- Serilizers logic implementation ----------------------- #
 
 class CarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Car
-        fields = ("id", "image", "name", "speed", "color","model", "seats", "bags_capcity" ,"available_for_city", "available_from", "available_till", "rent_price")
+        fields = ("id", "image", "name","reviews", "speed", "color","model", "seats", "bags_capcity" ,"available_for_city", "available_from", "available_till", "rent_price")
         
         extra_kwargs = {
             'id': {'required': True},
@@ -22,7 +23,6 @@ class CarSerializer(serializers.ModelSerializer):
             'rent_price': {'required': True},
         }
         
-    
 class CarRentAgentSerializer(serializers.ModelSerializer):
     fullname = serializers.CharField(write_only=True)
     nationality = serializers.CharField(write_only=True)
@@ -32,6 +32,15 @@ class CarRentAgentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarRent
         fields = "__all__"
+
+    def validate(self, data):
+        """
+        Check that the car is available for booking.
+        """
+        car = data.get('car')
+        if CarRent.objects.filter(car=car, city_location=data.get('city_location')).exists():
+            raise ValidationError("This car is already booked by another user.")
+        return data
 
     def create(self, validated_data):
         """
@@ -49,8 +58,6 @@ class CarRentAgentSerializer(serializers.ModelSerializer):
                 customer=user,
                 car=car,
                 days=validated_data['days'],
-                rent_start_from=validated_data['rent_start_from'],
-                rent_end_from=validated_data['rent_end_from'],
                 total_rent_price=validated_data['total_rent_price'],
                 city_location=validated_data['city_location']
             )
@@ -64,7 +71,7 @@ class CarUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Car
-        fields = ("id", "image", "name", "speed", "color", "available_for_city", "available_from", "available_till", "rent_price")
+        fields = ("id", "image", "name", "speed", "color", "available_for_city", "available_from", "available_till", "rent_price", 'reviews')
         read_only_fields = ("id",)  # ID should be read-only, as it's not updated
 
     def update(self, instance, validated_data):
@@ -79,6 +86,7 @@ class CarUpdateSerializer(serializers.ModelSerializer):
         instance.available_from = validated_data.get('available_from', instance.available_from)
         instance.available_till = validated_data.get('available_till', instance.available_till)
         instance.rent_price = validated_data.get('rent_price', instance.rent_price)
+        instance.reviews = validated_data.get('reviews', instance.reviews)
 
         instance.save()
         return instance
@@ -93,7 +101,7 @@ class CarDetails(serializers.ModelSerializer):
     car_reviews = CarReviews(many = True, read_only= True)
     class Meta:
         model = Car
-        fields = ("id", "image", "name", "speed", "color","model","seats","bags_capcity", "available_for_city", "available_from", "available_till", "rent_price", "car_reviews")
+        fields = ("id", "image", "name", "speed", "color","model","seats","bags_capcity", "available_for_city","reviews", "available_from", "available_till", "rent_price", "car_reviews")
     
 
 class OrderSerializer(serializers.ModelSerializer):
